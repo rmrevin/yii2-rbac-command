@@ -1,4 +1,4 @@
-Yii 2 extension for RBAC migrations
+Yii 2 extension for RBAC command
 ===============================
 
 Installation
@@ -7,96 +7,73 @@ Add in `composer.json`:
 ```
 {
     "require": {
-        "rmrevin/yii2-rbac-migration": "1.1.*"
+        "rmrevin/yii2-rbac-command": "1.0.*"
     }
 }
+```
+
+configuration
+-------------
+Create new command extends \rmrevin\yii\rbac\Command
+```php
+<?php
+
+namespace app\commands;
+
+class RbacCommand extends \rmrevin\yii\rbac\Command
+{
+
+    protected function rules()
+    {
+        // ...
+    }
+
+    protected function roles()
+    {
+        // ...
+    }
+
+    protected function permissions()
+    {
+        // ...
+    }
+
+    protected function inheritanceRoles()
+    {
+        // ...
+    }
+
+    protected function inheritancePermissions()
+    {
+        // ...
+    }
+}
+
+```
+
+In console application config
+(example: `/protected/config/console.php`)
+```php
+<?
+return array(
+  // ...
+	'controllerMap' => array(
+		// ...
+		'rbac' => array(
+			'class' => 'app\commands\RbacCommand',
+			'batchSize' => 1000,
+			'assignmentsMap' => [
+			    'frontend.bad' => 'frontend.good', // after next update all `frontend.bad` will be replaced by `frontend.good`
+			],
+		),
+	),
+	// ...
+);
 ```
 
 Usage
 -----
-Create new migration extends \rmrevin\yii\rbac\RbacMigration
-and execute as normal migration
-```php
-<?
-// ...
-
-class m140217_201400_rbac extends \rmrevin\yii\rbac\RbacMigration
-{
-
-    protected function getNewRoles()
-    {
-        return [
-            RbacFactory::Role('admin', 'Administrator'),
-            RbacFactory::Role('manager', 'Manager'),
-            RbacFactory::Role('customer', 'Customer'),
-            RbacFactory::Role('user', 'User'),
-        ];
-    }
-
-    protected function getNewPermissions()
-    {
-        return [
-            RbacFactory::Permission('catalog.view', 'Can view catalog'),
-            RbacFactory::Permission('catalog.order', 'Can order items from catalog'),
-            RbacFactory::Permission('catalog.favorite', 'Can mark favorite items'),
-        ];
-    }
-
-    protected function getNewInheritance()
-    {
-        return [
-            'admin' => [
-                'manager', // inherit role manager and all permissions from role manager & user
-            ],
-            'manager' => [
-                'user', // inherit role user and all permissions from role user
-            ],
-            'customer' => [
-                'user', // inherit role user and all permissions from role user
-
-                'catalog.order', // inherit permission catalog.order
-                'catalog.favorite', // inherit permission catalog.favorite
-            ],
-            'user' => [
-                'catalog.view', // inherit permission catalog.view
-            ],
-        ];
-    }
-
-    protected function getOldInheritance()
-    {
-        return [
-            'admin' => [
-                'manager', // inherit role manager and all permissions from role manager & user
-            ],
-            'manager' => [
-                'user', // inherit role user and all permissions from role user
-            ],
-            'user' => [
-            ],
-        ];
-    }
-}
-
+Execute command in command line
 ```
-
-Reference
----------
-Inheritance:
-* `protected getNewInheritance()`
-* `protected getOldInheritance()`
-
-Rules:
-* `protected getNewRules()`
-* `protected getRenamedRules()`
-* `protected getRemoveRules()`
-
-Roles:
-* `protected getNewRoles()`
-* `protected getRenamedRoles()`
-* `protected getRemoveRoles()`
-
-Permissions:
-* `protected getNewPermissions()`
-* `protected getRenamedPermissions()`
-* `protected getRemovePermissions()`
+./yii rbac/update
+```

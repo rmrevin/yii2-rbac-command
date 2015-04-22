@@ -14,10 +14,10 @@ abstract class Command extends \yii\console\Controller
 {
 
     /** @var int */
-    public $batch = 100;
+    public $batchSize = 100;
 
     /** @var array */
-    public $assignments_map = [
+    public $assignmentsMap = [
         // 'frontend.acess' => 'frontend.access', // mistake example
     ];
 
@@ -50,7 +50,7 @@ abstract class Command extends \yii\console\Controller
         $User = $this->getUserComponent();
         $UsersQuery = call_user_func([$User->identityClass, 'find']);
 
-        foreach ($UsersQuery->batch($this->batch) as $Users) {
+        foreach ($UsersQuery->batch($this->batchSize) as $Users) {
             /** @var \yii\db\ActiveRecord|\yii\web\IdentityInterface $User */
             foreach ($Users as $User) {
                 $assignments = $AM->getAssignments($User->primaryKey);
@@ -183,8 +183,8 @@ abstract class Command extends \yii\console\Controller
     private function restoreAssignments($assignments)
     {
         foreach ($assignments as $user_id => $item) {
-            $item = isset($this->assignments_map[$item])
-                ? $this->assignments_map[$item]
+            $item = isset($this->assignmentsMap[$item])
+                ? $this->assignmentsMap[$item]
                 : $item;
 
             $this->getAuthManagerComponent()
