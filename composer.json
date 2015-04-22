@@ -1,0 +1,33 @@
+{
+  "name": "rmrevin/yii2-rbac-command",
+  "description": "Extension for RBAC rules update for Yii2",
+  "keywords": [
+    "yii",
+    "rbac",
+    "command"
+  ],
+  "type": "yii2-extension",
+  "license": "MIT",
+  "minimum-stability": "stable",
+  "support": {
+    "issues": "https://github.com/rmrevin/yii2-rbac-command/issues",
+    "source": "https://github.com/rmrevin/yii2-rbac-command"
+  },
+  "authors": [
+    {
+      "name": "Roman Revin",
+      "email": "xgismox@gmail.com",
+      "homepage": "http://rmrevin.ru/"
+    }
+  ],
+  "require": {
+    "php": ">=5.4.0",
+
+    "yiisoft/yii2": "2.0.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "rmrevin\\yii\\rbac\\": ""
+    }
+  }
+}
