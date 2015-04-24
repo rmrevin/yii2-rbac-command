@@ -201,14 +201,19 @@ abstract class Command extends \yii\console\Controller
             if ($this->forceAssign !== null) {
                 $this->getAuthManagerComponent()
                     ->assign(RbacFactory::Role($this->forceAssign), $user_id);
+
+                echo "    > role `{$this->forceAssign}` force assigned to user id: {$user_id}." . PHP_EOL;
             }
-            echo "    > role `{$this->forceAssign}` force assigned to user id: {$user_id}." . PHP_EOL;
 
             if (!empty($items)) {
                 foreach ($items as $item) {
                     $item = isset($this->assignmentsMap[$item])
                         ? $this->assignmentsMap[$item]
                         : $item;
+
+                    if (empty($item) || $item === $this->forceAssign) {
+                        continue;
+                    }
 
                     $this->getAuthManagerComponent()
                         ->assign(RbacFactory::Role($item), $user_id);
