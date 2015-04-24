@@ -16,6 +16,9 @@ abstract class Command extends \yii\console\Controller
     /** @var int */
     public $batchSize = 100;
 
+    /** @var string|null */
+    public $forceAssign = null;
+
     /** @var array */
     public $assignmentsMap = [
         // 'frontend.acess' => 'frontend.access', // mistake example
@@ -36,6 +39,14 @@ abstract class Command extends \yii\console\Controller
 
         if (!empty($assignments)) {
             $this->restoreAssignments($assignments);
+        }
+    }
+
+    public function forceAssign($user_id)
+    {
+        if ($this->forceAssign !== null) {
+            $this->getAuthManagerComponent()
+                ->assign(RbacFactory::Role($this->forceAssign), $user_id);
         }
     }
 
@@ -182,17 +193,34 @@ abstract class Command extends \yii\console\Controller
         }
     }
 
+    /**
+     * @param array $assignments
+     * $assignments = [
+     *  'user_id' => ['role_1', 'role_2', 'role_3'],
+     *  '1' => ['admin', 'user'],
+     *  '2' => ['client', 'user'],
+     *  '3' => ['manager', 'seller', 'support', 'user'],
+     * ];
+     * @throws \yii\base\InvalidConfigException
+     */
     private function restoreAssignments($assignments)
     {
-        foreach ($assignments as $user_id => $item) {
-            $item = isset($this->assignmentsMap[$item])
-                ? $this->assignmentsMap[$item]
-                : $item;
+        foreach ($assignments as $user_id => $items) {
+            $this->forceAssign($user_id);
+            echo "    > role `{$this->forceAssign}` force assigned to user id: {$user_id}." . PHP_EOL;
 
-            $this->getAuthManagerComponent()
-                ->assign(RbacFactory::Role($item), $user_id);
+            if (!empty($items)) {
+                foreach ($items as $item) {
+                    $item = isset($this->assignmentsMap[$item])
+                        ? $this->assignmentsMap[$item]
+                        : $item;
 
-            echo "    > role `{$item}` assigned to user id: {$user_id}." . PHP_EOL;
+                    $this->getAuthManagerComponent()
+                        ->assign(RbacFactory::Role($item), $user_id);
+
+                    echo "    > role `{$item}` assigned to user id: {$user_id}." . PHP_EOL;
+                }
+            }
         }
     }
 }
