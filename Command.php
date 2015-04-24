@@ -42,14 +42,6 @@ abstract class Command extends \yii\console\Controller
         }
     }
 
-    public function forceAssign($user_id)
-    {
-        if ($this->forceAssign !== null) {
-            $this->getAuthManagerComponent()
-                ->assign(RbacFactory::Role($this->forceAssign), $user_id);
-        }
-    }
-
     /**
      * @return array
      * @throws \yii\base\InvalidConfigException
@@ -206,7 +198,10 @@ abstract class Command extends \yii\console\Controller
     private function restoreAssignments($assignments)
     {
         foreach ($assignments as $user_id => $items) {
-            $this->forceAssign($user_id);
+            if ($this->forceAssign !== null) {
+                $this->getAuthManagerComponent()
+                    ->assign(RbacFactory::Role($this->forceAssign), $user_id);
+            }
             echo "    > role `{$this->forceAssign}` force assigned to user id: {$user_id}." . PHP_EOL;
 
             if (!empty($items)) {
