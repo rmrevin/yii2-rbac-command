@@ -16,8 +16,8 @@ abstract class Command extends \yii\console\Controller
     /** @var int */
     public $batchSize = 100;
 
-    /** @var string|null */
-    public $forceAssign = null;
+    /** @var array */
+    public $forceAssign = [];
 
     /** @var array */
     public $assignmentsMap = [
@@ -198,11 +198,17 @@ abstract class Command extends \yii\console\Controller
     private function restoreAssignments($assignments)
     {
         foreach ($assignments as $user_id => $items) {
-            if ($this->forceAssign !== null) {
-                $this->getAuthManagerComponent()
-                    ->assign(RbacFactory::Role($this->forceAssign), $user_id);
+            if (!empty($this->forceAssign)) {
+                if (!is_array($this->forceAssign)) {
+                    $this->forceAssign = (array)$this->forceAssign;
+                }
 
-                echo "    > role `{$this->forceAssign}` force assigned to user id: {$user_id}." . PHP_EOL;
+                foreach ($this->forceAssign as $role) {
+                    $this->getAuthManagerComponent()
+                        ->assign(RbacFactory::Role($role), $user_id);
+
+                    echo "    > role `{$role}` force assigned to user id: {$user_id}." . PHP_EOL;
+                }
             }
 
             if (!empty($items)) {
@@ -211,7 +217,7 @@ abstract class Command extends \yii\console\Controller
                         ? $this->assignmentsMap[$item]
                         : $item;
 
-                    if (empty($item) || $item === $this->forceAssign) {
+                    if (empty($item) || in_array($item, (array)$this->forceAssign, true)) {
                         continue;
                     }
 
