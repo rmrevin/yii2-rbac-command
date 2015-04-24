@@ -34,7 +34,9 @@ abstract class Command extends \yii\console\Controller
         $this->updateInheritanceRoles();
         $this->updateInheritancePermissions();
 
-        $this->restoreAssignments($assignments);
+        if (!empty($assignments)) {
+            $this->restoreAssignments($assignments);
+        }
     }
 
     /**
