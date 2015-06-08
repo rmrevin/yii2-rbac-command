@@ -18,7 +18,7 @@ class ProjectRbacCommand extends \rmrevin\yii\rbac\Command
     protected function rules()
     {
         return [
-            RbacFactory::Rule('\rmrevin\yii\rbac\examples\ItsMyContract', 'frontend.contract.its-my'),
+            RbacFactory::Rule('frontend.contract.its-my', '\rmrevin\yii\rbac\examples\ItsMyContract'),
         ];
     }
 
