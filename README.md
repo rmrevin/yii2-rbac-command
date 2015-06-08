@@ -12,7 +12,7 @@ Add in `composer.json`:
 }
 ```
 
-configuration
+Configuration
 -------------
 Create new command extends \rmrevin\yii\rbac\Command
 ```php
@@ -63,7 +63,7 @@ return array(
 			'class' => 'app\commands\RbacCommand',
 			'batchSize' => 1000,
 			'assignmentsMap' => [
-			    'frontend.bad' => 'frontend.good', // after next update all `frontend.bad` will be replaced by `frontend.good`
+			    'frontend.old' => 'frontend.new', // after next update all `frontend.old` will be replaced by `frontend.new`
 			],
 		),
 	),
