@@ -13,7 +13,7 @@ namespace rmrevin\yii\rbac;
 abstract class Command extends \yii\console\Controller
 {
 
-    /** @var int */
+    /** @var integer */
     public $batchSize = 100;
 
     /** @var array */
@@ -24,21 +24,50 @@ abstract class Command extends \yii\console\Controller
         // 'frontend.acess' => 'frontend.access', // mistake example
     ];
 
+    /** @var boolean */
+    public $useTransaction = true;
+
+    /** @var \yii\db\Connection */
+    private $db;
+
     public function actionUpdate()
     {
         $assignments = $this->getAllAssignments();
 
-        $this->getAuthManagerComponent()
-            ->removeAll();
+        $AuthManager = $this->getAuthManagerComponent();
 
-        $this->updateRoles();
-        $this->updateRules();
-        $this->updatePermission();
-        $this->updateInheritanceRoles();
-        $this->updateInheritancePermissions();
+        $useTransaction = $AuthManager instanceof \yii\rbac\DbManager && $this->useTransaction === true;
 
-        if (!empty($assignments)) {
-            $this->restoreAssignments($assignments);
+        $transaction = null;
+
+        if ($useTransaction) {
+            $this->db = \yii\di\Instance::ensure($AuthManager->db, \yii\db\Connection::className());
+
+            $transaction = $this->db->beginTransaction();
+        }
+
+        try {
+            $AuthManager->removeAll();
+
+            $this->updateRoles();
+            $this->updateRules();
+            $this->updatePermission();
+            $this->updateInheritanceRoles();
+            $this->updateInheritancePermissions();
+
+            if (!empty($assignments)) {
+                $this->restoreAssignments($assignments);
+            }
+
+            if ($transaction !== null) {
+                $transaction->commit();
+            }
+        } catch (\Exception $e) {
+            $this->stderr($e->getMessage() . "\n");
+
+            if ($transaction !== null) {
+                $transaction->rollBack();
+            }
         }
     }
 
