@@ -108,6 +108,10 @@ abstract class Command extends \yii\console\Controller
                 $transaction->rollBack();
             }
         }
+
+        if ($AuthManager instanceof \yii\rbac\DbManager) {
+            $AuthManager->invalidateCache();
+        }
     }
 
     /**
