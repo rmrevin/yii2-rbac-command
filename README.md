@@ -7,7 +7,7 @@ Add in `composer.json`:
 ```
 {
     "require": {
-        "rmrevin/yii2-rbac-command": "1.0.*"
+        "rmrevin/yii2-rbac-command": "1.3.*"
     }
 }
 ```
