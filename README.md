@@ -1,15 +1,18 @@
-Yii 2 extension for RBAC command
-================================
+Yii 2 RBAC update command
+=========================
+This extension provides a console command to update the RBAC rules, roles and permissions
+for [Yii framework 2.0](http://www.yiiframework.com/) applications.
+
 
 Installation
 ------------
 ```bash
-composer require "rmrevin/yii2-rbac-command:1.3.*"
+composer require "rmrevin/yii2-rbac-command:1.4.*"
 ```
 
 Configuration
 -------------
-Create new command extends `\rmrevin\yii\rbac\Command`
+Create new console command extends `\rmrevin\yii\rbac\Command`
 ```php
 <?php
 
@@ -43,7 +46,6 @@ class RbacCommand extends \rmrevin\yii\rbac\Command
         // ...
     }
 }
-
 ```
 
 In console application config
@@ -63,12 +65,12 @@ return [
 		],
 	],
 	// ...
-[;
+];
 ```
 
 Usage
 -----
 Execute command in command line
 ```
-./yii rbac/update
+php yii rbac/update
 ```

@@ -7,6 +7,8 @@
 
 namespace rmrevin\yii\rbac;
 
+use yii\helpers\ArrayHelper;
+
 /**
  * Class Command
  * @package rmrevin\yii\rbac
@@ -42,18 +44,12 @@ abstract class Command extends \yii\console\Controller
     /**
      * @return \yii\rbac\Rule[]
      */
-    protected function rules()
-    {
-        return [];
-    }
+    abstract protected function rules();
 
     /**
      * @return \yii\rbac\Permission[]
      */
-    protected function permissions()
-    {
-        return [];
-    }
+    abstract protected function permissions();
 
     /**
      * @return array
@@ -88,8 +84,8 @@ abstract class Command extends \yii\console\Controller
         try {
             $AuthManager->removeAll();
 
-            $this->updateRoles();
             $this->updateRules();
+            $this->updateRoles();
             $this->updatePermission();
             $this->updateInheritanceRoles();
             $this->updateInheritancePermissions();
@@ -102,7 +98,7 @@ abstract class Command extends \yii\console\Controller
                 $transaction->commit();
             }
         } catch (\Exception $e) {
-            $this->stderr($e->getMessage() . "\n");
+            $this->stderr($e->getMessage() . PHP_EOL);
 
             if ($transaction !== null) {
                 $transaction->rollBack();
@@ -149,10 +145,11 @@ abstract class Command extends \yii\console\Controller
     /**
      * @return \yii\caching\FileCache
      */
-    private function getCacheComponent()
+    protected function getCacheComponent()
     {
         return new \yii\caching\FileCache([
             'keyPrefix' => 'rbac-runtime-',
+            'cacheFileSuffix' => '.json',
             'serializer' => [
                 ['yii\helpers\Json', 'encode'],
                 ['yii\helpers\Json', 'decode'],
@@ -160,7 +157,7 @@ abstract class Command extends \yii\console\Controller
         ]);
     }
 
-    private function updateRoles()
+    protected function updateRoles()
     {
         foreach ($this->roles() as $Role) {
             $this->getAuthManagerComponent()->add($Role);
@@ -169,7 +166,7 @@ abstract class Command extends \yii\console\Controller
         }
     }
 
-    private function updateRules()
+    protected function updateRules()
     {
         foreach ($this->rules() as $Rule) {
             $this->getAuthManagerComponent()->add($Rule);
@@ -178,7 +175,7 @@ abstract class Command extends \yii\console\Controller
         }
     }
 
-    private function updatePermission()
+    protected function updatePermission()
     {
         foreach ($this->permissions() as $Permission) {
             $this->getAuthManagerComponent()->add($Permission);
@@ -187,7 +184,7 @@ abstract class Command extends \yii\console\Controller
         }
     }
 
-    private function updateInheritanceRoles()
+    protected function updateInheritanceRoles()
     {
         foreach ($this->inheritanceRoles() as $role => $items) {
             foreach ($items as $item) {
@@ -199,7 +196,7 @@ abstract class Command extends \yii\console\Controller
         }
     }
 
-    private function updateInheritancePermissions()
+    protected function updateInheritancePermissions()
     {
         foreach ($this->inheritancePermissions() as $role => $items) {
             foreach ($items as $item) {
@@ -231,7 +228,7 @@ abstract class Command extends \yii\console\Controller
 
             if (strpos($answer, 'y') === 0) {
                 $this->cacheIterator(function ($key) use ($Cache, &$result) {
-                    $result = \yii\helpers\ArrayHelper::merge($result, $Cache->get($key));
+                    $result = ArrayHelper::merge($result, $Cache->get($key));
                 });
 
                 return $result;
@@ -271,7 +268,7 @@ abstract class Command extends \yii\console\Controller
      * ];
      * @throws \yii\base\InvalidConfigException
      */
-    private function restoreAssignments($assignments)
+    protected function restoreAssignments($assignments)
     {
         $Cache = $this->getCacheComponent();
 
@@ -321,7 +318,7 @@ abstract class Command extends \yii\console\Controller
     /**
      * @param callable $callback
      */
-    private function cacheIterator($callback)
+    protected function cacheIterator($callback)
     {
         $Cache = $this->getCacheComponent();
 

@@ -15,27 +15,23 @@ class RbacFactory
 {
 
     /**
-     * @param string $name
-     * @param string $class
-     * @param null $createdAt
-     * @param null $updatedAt
+     * @param string $name name of the rule
+     * @param string $class class of the rule
      * @return \yii\rbac\Rule
      */
-    public static function Rule($name, $class, $createdAt = null, $updatedAt = null)
+    public static function Rule($name, $class)
     {
         return \Yii::createObject([
             'class' => $class,
             'name' => $name,
-            'createdAt' => empty($createdAt) ? time() : $createdAt,
-            'updatedAt' => empty($updatedAt) ? time() : $updatedAt,
         ]);
     }
 
     /**
-     * @param string $name
-     * @param null $description
-     * @param null $ruleName
-     * @param null $data
+     * @param string $name the name of the role. This must be globally unique.
+     * @param string|null $description the role description
+     * @param string|null $ruleName name of the rule associated with this role
+     * @param mixed $data the additional data associated with this role
      * @return \yii\rbac\Role
      */
     public static function Role($name, $description = null, $ruleName = null, $data = null)
@@ -44,10 +40,10 @@ class RbacFactory
     }
 
     /**
-     * @param string $name
-     * @param null $description
-     * @param null $ruleName
-     * @param null $data
+     * @param string $name the name of the permission. This must be globally unique.
+     * @param string|null $description the permission description
+     * @param string|null $ruleName name of the rule associated with this permission
+     * @param mixed $data the additional data associated with this permission
      * @return \yii\rbac\Permission
      */
     public static function Permission($name, $description = null, $ruleName = null, $data = null)
@@ -57,10 +53,10 @@ class RbacFactory
 
     /**
      * @param string $class
-     * @param string $name
-     * @param null $description
-     * @param null $ruleName
-     * @param null $data
+     * @param string $name the name of the item. This must be globally unique.
+     * @param string|null $description the item description
+     * @param string|null $ruleName name of the rule associated with this item
+     * @param mixed $data the additional data associated with this item
      * @return object
      */
     public static function Item($class, $name, $description = null, $ruleName = null, $data = null)
