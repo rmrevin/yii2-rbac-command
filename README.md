@@ -7,7 +7,7 @@ for [Yii framework 2.0](http://www.yiiframework.com/) applications.
 Installation
 ------------
 ```bash
-composer require "rmrevin/yii2-rbac-command:1.4.*"
+composer require "rmrevin/yii2-rbac-command:~1.5"
 ```
 
 Configuration
@@ -59,9 +59,12 @@ return [
 		'rbac' => [
 			'class' => 'app\commands\RbacCommand',
 			'batchSize' => 1000,
+			'forceAssign' => ['user'], // force assign user role for all users
 			'assignmentsMap' => [
 			    'frontend.old' => 'frontend.new', // after next update all `frontend.old` will be replaced by `frontend.new`
 			],
+			'useTransaction' => true,
+			'useCache' => true,
 		],
 	],
 	// ...
@@ -72,5 +75,5 @@ Usage
 -----
 Execute command in command line
 ```
-php yii rbac/update
+php -f yii rbac/update
 ```

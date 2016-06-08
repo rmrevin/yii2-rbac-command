@@ -1,3 +1,8 @@
+2016-06-08 - 1.5.0
+------------------
+* Improve support DI container.
+* Refactoring.
+
 2015-12-23 - 1.4.0
 ------------------
 * Private methods are now protected.

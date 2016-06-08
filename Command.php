@@ -7,7 +7,12 @@
 
 namespace rmrevin\yii\rbac;
 
+use yii\caching\Cache;
+use yii\db\Connection;
+use yii\di\Instance;
 use yii\helpers\ArrayHelper;
+use yii\rbac\BaseManager;
+use yii\web\User;
 
 /**
  * Class Command
@@ -16,25 +21,80 @@ use yii\helpers\ArrayHelper;
 abstract class Command extends \yii\console\Controller
 {
 
-    /** @var integer */
+    /**
+     * Number of users processed in one step of the script
+     * @var integer
+     */
     public $batchSize = 1000;
 
-    /** @var array */
+    /**
+     * Roles to be added to all users
+     * @var array
+     */
     public $forceAssign = [];
 
-    /** @var array */
+    /**
+     * Map of roles reversal
+     * @var array
+     */
     public $assignmentsMap = [
         // 'frontend.acess' => 'frontend.access', // mistake example
     ];
 
-    /** @var boolean */
+    /**
+     * Use transaction if used db auth manager
+     * @var boolean
+     */
     public $useTransaction = true;
 
-    /** @var boolean */
+    /**
+     * Use the cache to recover roles if the failure occurred during initialization of new roles
+     * @var boolean
+     */
     public $useCache = true;
 
-    /** @var \yii\db\Connection */
-    private $db;
+    /**
+     * Database component
+     * @var string|array|Connection
+     */
+    public $db = 'db';
+
+    /**
+     * Auth manager component
+     * @var string|array|BaseManager
+     */
+    public $authManager = 'authManager';
+
+    /**
+     * Web user component
+     * @var string|array|User
+     */
+    public $user = 'user';
+
+    /**
+     * Cache component (if null, will create a new copy of the file cache)
+     * @var null|string|array|Cache
+     */
+    public $cache;
+
+    /**
+     * Initialize
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function init()
+    {
+        parent::init();
+
+        $this->db = Instance::ensure($this->db, Connection::className());
+        $this->authManager = Instance::ensure($this->authManager, BaseManager::className());
+        $this->user = Instance::ensure($this->user, User::className());
+
+        if (empty($this->cache)) {
+            $this->cache = $this->createCacheComponent();
+        } else {
+            $this->cache = Instance::ensure($this->cache, Cache::className());
+        }
+    }
 
     /**
      * @return \yii\rbac\Role[]
@@ -69,20 +129,18 @@ abstract class Command extends \yii\console\Controller
     {
         $assignments = $this->getAllAssignments();
 
-        $AuthManager = $this->getAuthManagerComponent();
-
-        $useTransaction = $AuthManager instanceof \yii\rbac\DbManager && $this->useTransaction === true;
+        $useTransaction =
+            $this->authManager instanceof \yii\rbac\DbManager
+            && $this->useTransaction === true;
 
         $transaction = null;
 
         if ($useTransaction) {
-            $this->db = \yii\di\Instance::ensure($AuthManager->db, \yii\db\Connection::className());
-
             $transaction = $this->db->beginTransaction();
         }
 
         try {
-            $AuthManager->removeAll();
+            $this->authManager->removeAll();
 
             $this->updateRules();
             $this->updateRoles();
@@ -105,90 +163,55 @@ abstract class Command extends \yii\console\Controller
             }
         }
 
-        if ($AuthManager instanceof \yii\rbac\DbManager) {
-            $AuthManager->invalidateCache();
+        if ($this->authManager instanceof \yii\rbac\DbManager) {
+            $this->authManager->invalidateCache();
         }
     }
 
     /**
-     * @throws \yii\base\InvalidConfigException
-     * @return \yii\rbac\DbManager
+     * Update roles method
      */
-    protected function getAuthManagerComponent()
-    {
-        $authManager = \Yii::$app->get('authManager');
-        if (!$authManager instanceof \yii\rbac\BaseManager) {
-            throw new \yii\base\InvalidConfigException(
-                sprintf('You should configure "%s" component before executing this command.', 'authManager')
-            );
-        }
-
-        return $authManager;
-    }
-
-    /**
-     * @throws \yii\base\InvalidConfigException
-     * @return \yii\web\User
-     */
-    protected function getUserComponent()
-    {
-        $user = \Yii::$app->get('user');
-        if (!$user instanceof \yii\web\User) {
-            throw new \yii\base\InvalidConfigException(
-                sprintf('You should configure "%s" component before executing this command.', 'user')
-            );
-        }
-
-        return $user;
-    }
-
-    /**
-     * @return \yii\caching\FileCache
-     */
-    protected function getCacheComponent()
-    {
-        return new \yii\caching\FileCache([
-            'keyPrefix' => 'rbac-runtime-',
-            'cacheFileSuffix' => '.json',
-            'serializer' => [
-                ['yii\helpers\Json', 'encode'],
-                ['yii\helpers\Json', 'decode'],
-            ],
-        ]);
-    }
-
     protected function updateRoles()
     {
         foreach ($this->roles() as $Role) {
-            $this->getAuthManagerComponent()->add($Role);
+            $this->authManager->add($Role);
 
             echo sprintf('    > role `%s` added.', $Role->name) . PHP_EOL;
         }
     }
 
+    /**
+     * Update rules method
+     */
     protected function updateRules()
     {
         foreach ($this->rules() as $Rule) {
-            $this->getAuthManagerComponent()->add($Rule);
+            $this->authManager->add($Rule);
 
             echo sprintf('    > rule `%s` added.', $Rule->name) . PHP_EOL;
         }
     }
 
+    /**
+     * Update permissions method
+     */
     protected function updatePermission()
     {
         foreach ($this->permissions() as $Permission) {
-            $this->getAuthManagerComponent()->add($Permission);
+            $this->authManager->add($Permission);
 
             echo sprintf('    > permission `%s` added.', $Permission->name) . PHP_EOL;
         }
     }
 
+    /**
+     * Update inheritance roles method
+     */
     protected function updateInheritanceRoles()
     {
         foreach ($this->inheritanceRoles() as $role => $items) {
             foreach ($items as $item) {
-                $this->getAuthManagerComponent()
+                $this->authManager
                     ->addChild(RbacFactory::Role($role), RbacFactory::Role($item));
 
                 echo sprintf('    > role `%s` inherited role `%s`.', $role, $item) . PHP_EOL;
@@ -196,11 +219,14 @@ abstract class Command extends \yii\console\Controller
         }
     }
 
+    /**
+     * Update inheritance permissions method
+     */
     protected function updateInheritancePermissions()
     {
         foreach ($this->inheritancePermissions() as $role => $items) {
             foreach ($items as $item) {
-                $this->getAuthManagerComponent()
+                $this->authManager
                     ->addChild(RbacFactory::Role($role), RbacFactory::Permission($item));
 
                 echo sprintf('    > role `%s` inherited permission `%s`.', $role, $item) . PHP_EOL;
@@ -216,42 +242,40 @@ abstract class Command extends \yii\console\Controller
     {
         $result = [];
 
-        $Cache = $this->getCacheComponent();
-        $AM = $this->getAuthManagerComponent();
-
         $useCache = $this->useCache === true;
 
-        if ($useCache && $Cache->exists('assignments-0')) {
+        if ($useCache && $this->cache->exists('assignments-0')) {
             echo '    > Assignments cache exists.' . PHP_EOL;
 
             $answer = $this->prompt('      > Use cache? [yes/no]');
 
             if (strpos($answer, 'y') === 0) {
-                $this->cacheIterator(function ($key) use ($Cache, &$result) {
-                    $result = ArrayHelper::merge($result, $Cache->get($key));
+                $this->cacheIterator(function ($key) use (&$result) {
+                    $result = ArrayHelper::merge($result, $this->cache->get($key));
                 });
 
                 return $result;
             }
         }
 
-        $User = $this->getUserComponent();
-        $UsersQuery = call_user_func([$User->identityClass, 'find']);
+        /** @var \yii\db\ActiveQuery $UsersQuery */
+        $UsersQuery = call_user_func([$this->user->identityClass, 'find']);
 
-        foreach ($UsersQuery->batch($this->batchSize) as $k => $Users) {
+        /** @var \yii\web\IdentityInterface[] $Users */
+        foreach ($UsersQuery->batch($this->batchSize, $this->db) as $k => $Users) {
             $chunk = [];
 
-            /** @var \yii\db\ActiveRecord|\yii\web\IdentityInterface $User */
             foreach ($Users as $User) {
-                $pk = $User->primaryKey;
+                $pk = $User->getId();
 
-                $assignments = $AM->getAssignments($pk);
-                $chunk[$pk] = array_keys($assignments);
-                $result[$pk] = $chunk[$pk];
+                $assignments = array_keys($this->authManager->getAssignments($pk));
+
+                $chunk[$pk] = $assignments;
+                $result[$pk] = $assignments;
             }
 
             if ($useCache) {
-                $Cache->set(sprintf('assignments-%d', $k), $chunk);
+                $this->cache->set(sprintf('assignments-%d', $k), $chunk);
             }
         }
 
@@ -270,8 +294,6 @@ abstract class Command extends \yii\console\Controller
      */
     protected function restoreAssignments($assignments)
     {
-        $Cache = $this->getCacheComponent();
-
         $useCache = $this->useCache === true;
 
         foreach ($assignments as $user_id => $items) {
@@ -281,7 +303,7 @@ abstract class Command extends \yii\console\Controller
                 }
 
                 foreach ($this->forceAssign as $role) {
-                    $this->getAuthManagerComponent()
+                    $this->authManager
                         ->assign(RbacFactory::Role($role), $user_id);
 
                     echo sprintf('    > role `%s` force assigned to user id: %s.', $role, $user_id) . PHP_EOL;
@@ -298,7 +320,7 @@ abstract class Command extends \yii\console\Controller
                         continue;
                     }
 
-                    $this->getAuthManagerComponent()
+                    $this->authManager
                         ->assign(RbacFactory::Role($item), $user_id);
 
                     echo sprintf('    > role `%s` assigned to user id: %s.', $item, $user_id) . PHP_EOL;
@@ -307,9 +329,9 @@ abstract class Command extends \yii\console\Controller
         }
 
         if ($useCache) {
-            if ($Cache->exists('assignments-0')) {
-                $this->cacheIterator(function ($key) use ($Cache) {
-                    $Cache->delete($key);
+            if ($this->cache->exists('assignments-0')) {
+                $this->cacheIterator(function ($key) {
+                    $this->cache->delete($key);
                 });
             }
         }
@@ -320,16 +342,33 @@ abstract class Command extends \yii\console\Controller
      */
     protected function cacheIterator($callback)
     {
-        $Cache = $this->getCacheComponent();
+        $i = 0;
 
-        $limit = 1000;
-        for ($i = 0; $i < $limit; $i++) {
+        while (true) {
             $key = sprintf('assignments-%d', $i);
-            if ($Cache->exists($key)) {
+
+            if ($this->cache->exists($key)) {
                 call_user_func($callback, $key);
             } else {
                 break;
             }
+
+            $i++;
         }
+    }
+
+    /**
+     * @return \yii\caching\FileCache
+     */
+    protected function createCacheComponent()
+    {
+        return new \yii\caching\FileCache([
+            'keyPrefix' => 'rbac-runtime-',
+            'cacheFileSuffix' => '.json',
+            'serializer' => [
+                ['yii\helpers\Json', 'encode'],
+                ['yii\helpers\Json', 'decode'],
+            ],
+        ]);
     }
 }
