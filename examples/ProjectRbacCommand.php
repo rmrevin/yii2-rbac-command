@@ -26,64 +26,55 @@ class ProjectRbacCommand extends \rmrevin\yii\rbac\Command
     protected function roles()
     {
         return [
-            RbacFactory::Role('admin', 'Администратор'),
-            RbacFactory::Role('manager', 'Менеджер'),
-            RbacFactory::Role('seller', 'Продавец'),
-            RbacFactory::Role('buyer', 'Покупатель'),
-            RbacFactory::Role('user', 'Пользователь'),
+            RbacFactory::Role('admin', 'Admin'),
+            RbacFactory::Role('manager', 'Manager'),
+            RbacFactory::Role('seller', 'Seller'),
+            RbacFactory::Role('buyer', 'Buyer'),
+            RbacFactory::Role('user', 'User'),
         ];
     }
 
     protected function permissions()
     {
         return [
-            RbacFactory::Permission('frontend.access', 'Имеет доступ к системе'),
+            RbacFactory::Permission('frontend.access', 'Can access'),
             /** Account module */
-            RbacFactory::Permission('backend.account.access', 'Имеет доступ к модулю пользователей'),
-            RbacFactory::Permission('backend.account.approve', 'Может подтверждать юр.лица'),
-            RbacFactory::Permission('backend.account.create', 'Может создавать пользователей'),
-            RbacFactory::Permission('backend.account.update', 'Может обновлять пользователей'),
-            RbacFactory::Permission('backend.account.delete', 'Может удалять пользователей'),
+            RbacFactory::Permission('backend.account.access', 'Can access backend account module'),
+            RbacFactory::Permission('backend.account.approve', 'Can approve accounts'),
+            RbacFactory::Permission('backend.account.create', 'Can create accounts'),
+            RbacFactory::Permission('backend.account.update', 'Can edit accounts'),
+            RbacFactory::Permission('backend.account.delete', 'Can remove accounts'),
             /** Contract module */
-            RbacFactory::Permission('frontend.contract.access', 'Имеет доступ к модулю контрактов'),
-            RbacFactory::Permission('frontend.contract.import', 'Имеет доступ к импорту контрактов'),
-            RbacFactory::Permission('frontend.contract.create', 'Может создавать контракты'),
-            RbacFactory::Permission('frontend.contract.update', 'Может обновлять все контракты'),
-            RbacFactory::Permission('frontend.contract.update.own', 'Может обновлять свои контракты', 'frontend.contract.its-my'),
-            RbacFactory::Permission('frontend.contract.delete', 'Может удалять все контракты'),
-            RbacFactory::Permission('frontend.contract.delete.own', 'Может удалять свои контракты', 'frontend.contract.its-my'),
+            RbacFactory::Permission('frontend.contract.access', 'Can access contract module'),
+            RbacFactory::Permission('frontend.contract.import', 'Can import contracts'),
+            RbacFactory::Permission('frontend.contract.create', 'Can create contracts'),
+            RbacFactory::Permission('frontend.contract.update', 'Can edit contracts'),
+            RbacFactory::Permission('frontend.contract.update.own', 'Can edit own contracts', 'frontend.contract.its-my'),
+            RbacFactory::Permission('frontend.contract.delete', 'Can remove contracts'),
+            RbacFactory::Permission('frontend.contract.delete.own', 'Can remove own contracts', 'frontend.contract.its-my'),
             /** Deal module */
-            RbacFactory::Permission('backend.deal.access', 'Может управлять всеми сделками'),
-            RbacFactory::Permission('frontend.deal.create', 'Может создавать сделки'),
-            RbacFactory::Permission('frontend.deal.buy', 'Может просматривать свои исходящие сделки (покупка)'),
-            RbacFactory::Permission('frontend.deal.sell', 'Может просматривать свои входящие сделки (продажа)'),
+            RbacFactory::Permission('backend.deal.access', 'Can access backend deal module'),
+            RbacFactory::Permission('frontend.deal.create', 'Can create deals'),
+            RbacFactory::Permission('frontend.deal.buy', 'Can access own deals as buyer'),
+            RbacFactory::Permission('frontend.deal.sell', 'Can access own deals as seller'),
             /** Pages module */
-            RbacFactory::Permission('backend.pages.access', 'Имеет доступ к модулю статических страниц'),
-            RbacFactory::Permission('backend.pages.create', 'Может создавать статические страницы'),
-            RbacFactory::Permission('backend.pages.update', 'Может обновлять статические страницы'),
-            RbacFactory::Permission('backend.pages.delete', 'Может удалять статические страницы'),
-            RbacFactory::Permission('frontend.pages.view', 'Может просматривать статические страницы'),
+            RbacFactory::Permission('backend.pages.access', 'Can access backend pages module'),
+            RbacFactory::Permission('backend.pages.create', 'Can create pages'),
+            RbacFactory::Permission('backend.pages.update', 'Can edit pages'),
+            RbacFactory::Permission('backend.pages.delete', 'Can remove pages'),
+            RbacFactory::Permission('frontend.pages.view', 'Can view pages'),
             /** Settings module */
-            RbacFactory::Permission('backend.settings.access', 'Имеет доступ к модулю настроек'),
+            RbacFactory::Permission('backend.settings.access', 'Can access backend settings module'),
         ];
     }
 
     protected function inheritanceRoles()
     {
         return [
-            'admin' => [
-                'manager',
-            ],
-            'manager' => [
-                'seller',
-                'buyer',
-            ],
-            'seller' => [
-                'user',
-            ],
-            'buyer' => [
-                'user',
-            ],
+            'admin' => ['manager'],
+            'manager' => ['seller', 'buyer'],
+            'seller' => ['user'],
+            'buyer' => ['user'],
             'user' => [],
         ];
     }

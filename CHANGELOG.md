@@ -1,3 +1,8 @@
+2017-03-05 - 1.6.1
+------------------
+* Fix Db component inside DbManager.
+* Update readme.
+
 2017-03-05 - 1.6.0
 ------------------
 * Improve support DI container.

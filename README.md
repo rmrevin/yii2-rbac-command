@@ -7,12 +7,12 @@ for [Yii framework 2.0](http://www.yiiframework.com/) applications.
 Installation
 ------------
 ```bash
-composer require "rmrevin/yii2-rbac-command:~1.5"
+composer require "rmrevin/yii2-rbac-command:~1.6"
 ```
 
 Configuration
 -------------
-Create new console command extends `\rmrevin\yii\rbac\Command`
+Create new console command extends `\rmrevin\yii\rbac\Command` ([example](https://github.com/rmrevin/yii2-rbac-command/blob/master/examples/ProjectRbacCommand.php))
 ```php
 <?php
 
@@ -75,5 +75,5 @@ Usage
 -----
 Execute command in command line
 ```
-php -f yii rbac/update
+yii rbac/update
 ```

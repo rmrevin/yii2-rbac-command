@@ -12,6 +12,7 @@ use yii\db\Connection;
 use yii\di\Instance;
 use yii\helpers\ArrayHelper;
 use yii\rbac\BaseManager;
+use yii\rbac\DbManager;
 use yii\web\User;
 
 /**
@@ -87,6 +88,10 @@ abstract class Command extends \yii\console\Controller
             $this->authManager = Instance::ensure($this->authManager, BaseManager::className());
             $this->user = Instance::ensure($this->user, User::className());
 
+            if ($this->authManager instanceof DbManager) {
+                $this->authManager->db = $this->db;
+            }
+
             if (empty($this->cache)) {
                 $this->cache = $this->createCacheComponent();
             } else {
@@ -133,7 +138,7 @@ abstract class Command extends \yii\console\Controller
         $assignments = $this->getAllAssignments();
 
         $useTransaction =
-            $this->authManager instanceof \yii\rbac\DbManager
+            $this->authManager instanceof DbManager
             && $this->useTransaction === true;
 
         $transaction = null;
@@ -166,7 +171,7 @@ abstract class Command extends \yii\console\Controller
             }
         }
 
-        if ($this->authManager instanceof \yii\rbac\DbManager) {
+        if ($this->authManager instanceof DbManager) {
             $this->authManager->invalidateCache();
         }
     }
