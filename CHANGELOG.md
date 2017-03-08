@@ -1,3 +1,7 @@
+2017-03-05 - 1.6.0
+------------------
+* Improve support DI container.
+
 2016-06-08 - 1.5.0
 ------------------
 * Improve support DI container.

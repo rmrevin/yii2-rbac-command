@@ -78,21 +78,24 @@ abstract class Command extends \yii\console\Controller
     public $cache;
 
     /**
-     * Initialize
-     * @throws \yii\base\InvalidConfigException
+     * @inheritdoc
      */
-    public function init()
+    public function beforeAction($action)
     {
-        parent::init();
+        if (parent::beforeAction($action)) {
+            $this->db = Instance::ensure($this->db, Connection::className());
+            $this->authManager = Instance::ensure($this->authManager, BaseManager::className());
+            $this->user = Instance::ensure($this->user, User::className());
 
-        $this->db = Instance::ensure($this->db, Connection::className());
-        $this->authManager = Instance::ensure($this->authManager, BaseManager::className());
-        $this->user = Instance::ensure($this->user, User::className());
+            if (empty($this->cache)) {
+                $this->cache = $this->createCacheComponent();
+            } else {
+                $this->cache = Instance::ensure($this->cache, Cache::className());
+            }
 
-        if (empty($this->cache)) {
-            $this->cache = $this->createCacheComponent();
+            return true;
         } else {
-            $this->cache = Instance::ensure($this->cache, Cache::className());
+            return false;
         }
     }
 
